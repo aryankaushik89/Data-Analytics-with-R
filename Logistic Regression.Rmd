@@ -1,0 +1,70 @@
+---
+title: "Logistic Regression"
+output: pdf_document
+---
+
+In the MASS library there is a data set called "menarche" in which there are three variables: "Age" (average age of age homogeneous groups of girls), "Total" (number of girls in each group), and "Menarche" (number of girls in the group who have reached menarche). 
+```{r}
+library("MASS") 
+data(menarche)
+head(menarche)
+tail(menarche)
+str(menarche)
+summary(menarche)
+plot(Menarche/Total ~ Age, data=menarche)
+glm.out = glm(cbind(Menarche, Total-Menarche) ~ Age, family=binomial(logit), data=menarche) 
+summary(glm.out)
+plot(Menarche/Total ~ Age, data=menarche)
+lines(menarche$Age, glm.out$fitted, type="l", col="red")
+title(main="Menarche Data with Fitted Logistic Regression Line") 
+```
+
+**Let's analyze this looking at hypertension**
+Response is hypertensive y/n.
+Predictors are smoking (y/n), obesity (y/n), snoring (y/n). 
+How well can these 3 factors explain/predict the presence of hypertension? Which are important? 
+
+We enter the following data:
+```{r}
+no.yes <- c("No","Yes")
+smoking <- gl(2,1,8,no.yes)
+obesity <- gl(2,2,8,no.yes)
+snoring <- gl(2,4,8,no.yes)
+n.tot <- c(60,17,8,2,187,85,51,23)
+n.hyp <- c(5,2,1,0,35,13,15,8)
+data.frame(smoking,obesity,snoring,n.tot,n.hyp)
+```
+
+The `gl` function refers to ?generate levels?. The first three arguments to gl are, respectively, "the number of levels"", "the repeat count of each level", and "the total length of the vector". A fourth
+argument can be used to specify the level names of the resulting factor.
+The result is apparent from the printout of the generated variables.
+
+The `cbind` function ('c' for 'column') is used to bind variables together,
+columnwise, to form a matrix. 
+```{r}
+hyp.tbl <- cbind(n.hyp,n.tot-n.hyp)
+hyp.tbl
+```
+We can specify the logistic regression model as
+```{r}
+glm(hyp.tbl~smoking+obesity+snoring,family=binomial("logit"))
+```
+Actually, "logit" is the default for `binomial` and the `family` argument
+is the second argument to `glm`, so it suffices to write
+```{r}
+glm.hyp <- glm(hyp.tbl~smoking+obesity+snoring,binomial)
+```
+```{r}
+summary(glm.hyp)
+```
+
+
+```
+It is seen that the correlation between the estimates is fairly small, so that it may be expected that removing a variable from the model does not change the coefficients and p-values for other variables much. (The correlations between the regression coefficients and intercept are not very informative;
+they mostly relate to whether the variable in question has many or few observations in the "Yes" category.)
+
+The z test in the table of regression coefficients immediately shows that the model can be simplified by removing smoking. The result then looks as follows:
+```{r}
+glm.hyp <- glm(hyp.tbl~obesity+snoring,binomial)
+summary(glm.hyp)
+```

@@ -1,0 +1,58 @@
+---
+title: "Linear Regression with Iris Dataset"
+
+---
+
+# Creation of Test and Training Data
+Create random split for iris dataset
+```{r echo=TRUE}
+rn_train <- sample(nrow(iris), floor(nrow(iris)*0.7))
+train <- iris[rn_train,]
+test <- iris[-rn_train,]
+```
+
+# Linear Regression: Fitting the Model 
+Air quality data set
+```{r echo=TRUE}
+plot(airquality$Wind, airquality$Temp)
+```
+
+## Linear Regression: Fitting the Model
+```{r echo=TRUE}
+model_ulm <- lm(Wind~Temp, data=airquality) 
+summary(model_ulm)
+```
+
+# Linear Regression: Prediction
+```{r echo=TRUE}
+attach(airquality)
+rn_train <- sample(nrow(airquality), 
+                   floor(nrow(airquality)*0.8))
+train <- airquality[rn_train,c("Wind","Temp")]
+test <- airquality[-rn_train,c("Wind","Temp")]
+model_ulm <- lm(Wind~Temp, data=train) 
+prediction <- predict(model_ulm, interval="prediction", 
+                      newdata =test)
+## newdata: An optional data frame in which to look  
+## for variables with which to predict. 
+## If omitted, the fitted values are used.
+```
+
+# Linear Regression: Error Distribution
+```{r echo=TRUE, fig.width=10, fig.height=10}
+errors <- prediction[,"fit"] - test$Wind
+hist(errors)
+## take the fit column, i.e. fitted values in prediction 
+## fitted values are the y-values (here wind data) that you 
+## would expect for the given x-values (here temp data) 
+## according to the best-fitting straightline
+```
+
+# Linear Regression: RMSE
+```{r echo=TRUE}
+sqrt(sum((prediction[,"fit"] - test$Wind)^2)/nrow(test))
+```
+
+
+
+

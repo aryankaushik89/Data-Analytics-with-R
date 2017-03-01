@@ -1,0 +1,122 @@
+
+---
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(fig.width=6, fig.height=4,  warning=FALSE, message=FALSE, fig.path='figure/', echo=FALSE)
+```
+install.packages("dplyr")
+install.packages("gmodels")
+install.packages("corrplot")
+install.packages("plyr")
+```{r, echo=FALSE}
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+library(class)
+library(gmodels)
+```
+
+
+```{r}
+normalize <- function(x){
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+##Exploratory Data Analysis Summary using KNN
+
+KNN algorithm is used to predict the rating of the white Portuguese 'Vinho Verde' wine using physiochemical properties such as citric acid, sulfur dioxide and sulphates.
+ 
+
+
+###Data source 
+The data is from the wine quality data set in the UCI Machine Learning Repository. There are 12 variables in the data set, with most of the observations being normal, rather than excellent or poor wine. The goal is to predict wine quality on a score between 0 and 10, using the physicochemical attributes such as residual sugar, chlorides and sulphates. 
+
+```{r}
+url <- "http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv"
+wine <- read.csv(url, sep=";")
+str(wine)
+```
+
+Other than quality, the remaining variables are all continuous numeric data.
+
+###Missing data
+
+No missing data is found in the data set.
+
+```{r}
+sapply(wine[, 1:11], function(x) sum(is.na(x)))
+```
+
+###Correlation
+
+```{r}
+wine.cor <- cor(wine)
+corrplot(wine.cor)
+```
+
+For example, we can see there is a linear relationship between alcohol and density.
+
+```{r fig.width=6, fig.height=4}
+ggplot(data=wine, aes(x=alcohol, y=density, colour=quality)) + geom_point()
+```
+
+###Distribution of wine quailty
+
+```{r}
+wine <- read.csv(url, sep=";")
+hist(wine$quality)
+table(wine$quality)
+```
+
+Most of the wine observations belong to quality 5 and 6. 
+
+###Proposed model
+
+The dependent variable, quality, has only discrete values, which will be reduced to 3 levels in the analysis. The remaining attributes are all continuous numeric variables. knn algorithm is the proposed model here as it is a simple machine learning algorithm, and it is very straightforward to calculate the distance between the stored data and the new instance for the purpose of predicting the label of dependent variable, quality.
+
+####Step1: Use three levels of rating for quality
+
+```{r}
+
+ratingDf <- data.frame(quality=3:9, rating=c(0,0,1,1,2,2,2))
+wine <- join(wine, ratingDf, by='quality')
+wine <- wine %>% dplyr::select(-quality) %>% dplyr::rename(quality = rating)
+
+wine$quality <- as.factor(wine$quality)
+```
+
+####Step2: normalize the data set
+
+```{r}
+wine_norm <- as.data.frame(lapply(wine[1:11], normalize))
+summary(wine_norm)
+
+wine_norm$quality <- wine$quality
+wine <- wine_norm
+```
+
+Now all the independent variables all fall between 0 and 1.
+
+####Step3: Divide data to traing and test groups for performance evaluation
+
+```{r}
+set.seed(1234)
+idx <- sample(2, nrow(wine), replace=TRUE, prob=c(0.67, 0.33))
+training <- wine[idx == 1, 1:11]
+test <- wine[idx == 2, 1:11]
+
+trainLabels <- wine[idx == 1, 12]
+testLabels <- wine[idx == 2, 12]
+```
+
+####Step4: Performance evaluation
+
+```{r}
+predictLabels <- knn(training, test, trainLabels, k=8)
+table(predictLabels)
+CrossTable(x=testLabels, y=predictLabels, prop.chisq=FALSE)
+```
+
+

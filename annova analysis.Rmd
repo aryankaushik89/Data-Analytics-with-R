@@ -1,0 +1,57 @@
+---
+title: "Annova Analysis"
+
+----
+
+
+install.packages("ISwR")
+
+```{r echo=TRUE}
+library(ISwR)
+attach(red.cell.folate)
+summary(red.cell.folate)
+```
+
+## One-way analysis of variance
+Variation between groups is labelled by the name of the grouping factor (ventilation), and variation within groups is labelled Residual. 
+
+```{r echo=TRUE}
+anova(lm(folate~ventilation)) 
+```
+
+# Two-way analysis of variance
+To perform a two-way ANOVA, it is necessary to have data in one vector,
+with the two classifying factors parallel to it. We consider an example
+concerning heart rate after administration of enalaprilate.
+
+```{r echo=TRUE}
+attach(heart.rate)
+heart.rate
+```
+If you look inside the heart.rate.R file in the data directory of the
+ISwR package, you will see that the actual definition of the data frame is
+
+```{r echo=TRUE}
+heart.rate <- data.frame(hr = c(96,110,89,95,128,100,72,79,100,
+92,106,86,78,124,98,68,75,106,
+86,108,85,78,118,100,67,74,104,
+92,114,83,83,118,94,71,74,102),
+subj=gl(9,1,36),
+time=gl(4,9,36,labels=c(0,30,60,120)))
+```
+The gl (generate levels) function is specially designed for generating patterned factors for balanced experimental designs. It has three arguments:
+the number of levels, the block length (how many times each level should
+repeat), and the total length of the result. The two patterns in the data
+frame are thus
+
+```{r echo=TRUE}
+gl(9,1,36)
+```
+```{r echo=TRUE}
+gl(4,9,36,labels=c(0,30,60,120))
+```
+Once the variables have been defined, the two-way analysis of variance is
+specified simply by
+```{r echo=TRUE}
+anova(lm(hr~subj+time))
+```
